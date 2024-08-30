@@ -13,24 +13,44 @@ int main(int argc, char** argv) {
 	unsigned x, y, d;
 
 	if (argc <= 2) {
+		printf("No input parameters\n");
 		return 0;
 	}
 
 	upng = upng_new_from_file(argv[1]);
-	if (upng_get_error(upng) == UPNG_EOK) {
+	if (upng == NULL) {
+		printf("error: Got NULL instead of UPNG object\n");
+		return 0;
+	}
+	if (upng_get_error(upng) != UPNG_EOK) {
 		printf("error: %u %u\n", upng_get_error(upng), upng_get_error_line(upng));
 		return 0;
 	}
 
-	width = upng_get_width(upng);
-	height = upng_get_height(upng);
-	depth = upng_get_bpp(upng) / 8;
+	do {
+		if (upng_decode(upng) != UPNG_EOK || upng_get_error(upng) != UPNG_EOK) {
+			printf("error: Can't decode PNG (%u %u)\n", upng_get_error(upng), upng_get_error_line(upng));
+			break;
+		}
 
-	printf("size:	%ux%ux%u (%u)\n", width, height, upng_get_bpp(upng), upng_get_size(upng));
-	printf("format:	%u\n", upng_get_format(upng));
+		width = upng_get_width(upng);
+		height = upng_get_height(upng);
+		depth = upng_get_bpp(upng) / 8;
 
-	if (upng_get_format(upng) == UPNG_RGB8 || upng_get_format(upng) == UPNG_RGBA8) {
+		printf("size:	%ux%ux%u (%u)\n", width, height, upng_get_bpp(upng), upng_get_size(upng));
+		printf("format:	%u\n", upng_get_format(upng));
+
+		if (upng_get_format(upng) != UPNG_RGB8 && upng_get_format(upng) != UPNG_RGBA8) {
+			printf("error: Unsupported format\n");
+			break;
+		}
+
 		fh = fopen(argv[2], "wb");
+		if (fh == NULL) {
+			printf("error: Can't open resulted file\n");
+			break;
+		}
+
 		fprintf(fh, "%c%c%c", 0, 0, 2);
 		fprintf(fh, "%c%c%c%c%c", 0, 0, 0, 0, 0);
 		fprintf(fh, "%c%c%c%c%c%c%c%c%c%c", 0, 0, 0, 0, LO(width), HI(width), LO(height), HI(height), upng_get_bpp(upng), upng_get_bitdepth(upng));
@@ -44,7 +64,7 @@ int main(int argc, char** argv) {
 		}
 
 		fclose(fh);
-	}
+	} while(0);
 
 	upng_free(upng);
 	return 0;
