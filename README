@@ -152,3 +152,11 @@ TODO
 
 - Provide vertical flipping of decoded image data for APIs that prefer textures
   with an origin in the lower-left instead of upper-left.
+  
+Example of usage:
+- sudo apt-get install libsdl1.2-dev
+- gcc glview.c upng.c  -lSDL -lGL -lGLU
+- gcc upng.c png2tga.c
+- make png2tga
+- valgrind --leak-check=yes ./a.out test1.png res
+- ./a.out test1.png res
